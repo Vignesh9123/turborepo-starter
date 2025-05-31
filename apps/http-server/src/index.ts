@@ -53,6 +53,40 @@ app.post("/signin", async(req, res)=>{
     }
 })
 
+
+app.post("/room", async(req, res)=>{
+    try {
+        const {name, toUserId} = req.body
+        const room = await prisma.room.create({
+            data: {
+                name,
+                users: {
+                    connect: [
+                        {
+                            id: toUserId
+                        },
+                        {
+                            id: req.user.id
+                        }
+                    ]
+                }
+            },
+            include: {
+                users: {
+                    select: {
+                        id: true
+                    }
+                }
+            }
+        })
+        res.status(200).json({ room })
+    } catch (error : any) {
+        console.log("room create error", error)
+        res.status(500).json({
+            message: error.message || "Something went wrong"
+        })
+    }
+})
 app.listen(config.PORT, ()=>{
     console.log("HTTP server is running on port", config.PORT)
 })
