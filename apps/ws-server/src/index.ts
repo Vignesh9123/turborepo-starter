@@ -1,25 +1,33 @@
 import ws from 'ws';
-
+import { prisma } from '@repo/db'
 
 interface MessageJson{
     type: "join" | "message"| "leave",
     message: string,
-    roomId?: string
+    roomId?: string,
+    userId?: string
 }
 
 
 const rooms = new Map<string, Set<ws>>();
 const socketsToRooms = new Map<ws, string>();
+const socketToUser = new Map<ws, string>();
 
 const wss = new ws.Server({ port: 8080 });
+
+// TODO: Add try catch and middleware
 wss.on('connection', (ws) => {
-    ws.on('message', (message, isBinary) => {
+    ws.on('message', async(message, isBinary) => {
         const messageJson = JSON.parse(message.toString()) as MessageJson;
         if(messageJson.type == 'join'){
             console.log("Joining room", messageJson.roomId);
             if(!messageJson.roomId){
                 return;
             }
+            if(!messageJson.userId){
+                return;
+            }
+            socketToUser.set(ws, messageJson.userId);
             if(!rooms.has(messageJson.roomId)){
                 rooms.set(messageJson.roomId, new Set());
             }
@@ -50,6 +58,17 @@ wss.on('connection', (ws) => {
             if(!rooms.has(roomId)){
                 return;
             }
+            const userId = socketToUser.get(ws);
+            if(!userId){
+                return;
+            }
+            await prisma.chat.create({
+                data: {
+                    message: messageJson.message,
+                    roomId: roomId,
+                    userId
+                }
+            })
             rooms.get(roomId)?.forEach((client) => {
                 if(client == ws){
                     return;
