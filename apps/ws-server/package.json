@@ -10,7 +10,8 @@
     "dev": "tsc && node dist/index.js"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*"
+    "@repo/typescript-config": "workspace:*",
+    "@repo/db": "workspace:*"
   },
   "keywords": [],
   "author": "",
