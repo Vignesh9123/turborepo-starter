@@ -20,4 +20,22 @@ model User {
   email String    @unique
   name  String?
   profilePicture String?
+  rooms Room[]
+  chats Chat[]
+}
+
+model Room {
+  id String @id @default(cuid())
+  name String
+  users User[]
+  messages Chat[]
+}
+
+model Chat {
+  id String @id @default(cuid())
+  roomId String
+  room Room @relation(fields: [roomId], references: [id])
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  message String
 }
